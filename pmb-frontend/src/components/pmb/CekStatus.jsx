@@ -1,12 +1,9 @@
 import { useState } from 'react';
 import Button from '../ui/Button';
 import StatusBadge from './StatusBadge';
-import { pendaftarApi } from '../../utils/api';
+import JadwalCard from './JadwalCard';
+import { pendaftarApi, jadwalPublikApi } from '../../utils/api';
 
-/**
- * CekStatus — komponen untuk calon mahasiswa mengecek status pendaftaran
- * Jika status Lolos Seleksi, tampilkan tombol heregistrasi
- */
 const CekStatus = () => {
   const [nomor, setNomor] = useState('');
   const [result, setResult] = useState(null);
@@ -14,6 +11,20 @@ const CekStatus = () => {
   const [loading, setLoading] = useState(false);
   const [heregLoading, setHeregLoading] = useState(false);
   const [heregSuccess, setHeregSuccess] = useState('');
+  const [jadwalData, setJadwalData] = useState(null);
+  const [jadwalLoading, setJadwalLoading] = useState(false);
+
+  const fetchJadwal = async (nomorPendaftaran) => {
+    setJadwalLoading(true);
+    try {
+      const res = await jadwalPublikApi.getByNomor(nomorPendaftaran);
+      setJadwalData(res.data);
+    } catch {
+      setJadwalData(null);
+    } finally {
+      setJadwalLoading(false);
+    }
+  };
 
   const handleCek = async (e) => {
     e.preventDefault();
@@ -22,14 +33,26 @@ const CekStatus = () => {
     setError('');
     setResult(null);
     setHeregSuccess('');
+    setJadwalData(null);
     try {
       const res = await pendaftarApi.getByNomor(nomor.trim().toUpperCase());
       setResult(res.data);
+      await fetchJadwal(res.data.nomor_pendaftaran);
     } catch (err) {
       setError(err.message || 'Nomor pendaftaran tidak ditemukan. Pastikan format benar (PMB-2025-XXXX).');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleKonfirmasi = async (token) => {
+    await jadwalPublikApi.konfirmasi(result.nomor_pendaftaran, token);
+    await fetchJadwal(result.nomor_pendaftaran);
+  };
+
+  const handleReschedule = async (alasan) => {
+    await jadwalPublikApi.requestReschedule(result.nomor_pendaftaran, alasan);
+    await fetchJadwal(result.nomor_pendaftaran);
   };
 
   const handleHeregistrasi = async () => {
@@ -142,6 +165,30 @@ const CekStatus = () => {
             <p className="text-xs text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
               Maaf, Anda belum lolos seleksi periode ini. Terima kasih sudah mendaftar.
             </p>
+          )}
+        </div>
+      )}
+
+      {result && (
+        <div>
+          {jadwalLoading && (
+            <div className="p-4 bg-white border border-slate-200 rounded-xl text-center text-slate-500 text-sm">
+              Memuat jadwal tes...
+            </div>
+          )}
+          {!jadwalLoading && jadwalData?.has_jadwal && (
+            <JadwalCard
+              nomor={result.nomor_pendaftaran}
+              jadwal={jadwalData.jadwal}
+              onKonfirmasi={handleKonfirmasi}
+              onReschedule={handleReschedule}
+              loading={false}
+            />
+          )}
+          {!jadwalLoading && jadwalData && !jadwalData.has_jadwal && result.status === 'Lolos Seleksi' && (
+            <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl text-center text-slate-500 text-sm">
+              Jadwal tes belum ditetapkan. Pantau terus halaman ini.
+            </div>
           )}
         </div>
       )}

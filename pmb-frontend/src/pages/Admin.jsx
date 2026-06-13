@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import AdminLogin from '../components/pmb/AdminLogin';
 import TabelPendaftar from '../components/pmb/TabelPendaftar';
+import JadwalManagement from './JadwalManagement';
+import RescheduleManagement from './RescheduleManagement';
 import { pendaftarApi, statistikApi, authApi, removeToken, getToken, getExportCsvUrl } from '../utils/api';
 import { STATUS_LIST } from '../constants';
 
@@ -10,6 +12,7 @@ import { STATUS_LIST } from '../constants';
  */
 const Admin = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [activeTab, setActiveTab] = useState('pendaftar');
   const [pendaftarList, setPendaftarList] = useState([]);
   const [statistik, setStatistik] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -146,6 +149,33 @@ const Admin = () => {
         </div>
       </header>
 
+      {/* Tab navigation */}
+      <div className="border-b border-slate-200 bg-white">
+        <div className="max-w-6xl mx-auto px-4 flex gap-0">
+          {[
+            { key: 'pendaftar',  label: 'Data Pendaftar' },
+            { key: 'jadwal',     label: 'Jadwal Tes' },
+            { key: 'reschedule', label: 'Reschedule' },
+          ].map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={`px-5 py-3 text-sm font-medium border-b-2 transition-colors ${
+                activeTab === tab.key
+                  ? 'border-blue-600 text-blue-600'
+                  : 'border-transparent text-slate-500 hover:text-slate-700'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {activeTab === 'jadwal' && <JadwalManagement />}
+      {activeTab === 'reschedule' && <RescheduleManagement />}
+
+      {activeTab === 'pendaftar' && (
       <div className="max-w-6xl mx-auto px-4 py-6 space-y-6">
         {/* Stat cards — status */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -231,6 +261,7 @@ const Admin = () => {
           )}
         </div>
       </div>
+      )}
     </div>
   );
 };

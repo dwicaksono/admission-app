@@ -80,3 +80,29 @@ export const statistikApi = {
 /** URL langsung untuk download CSV (buka di tab baru dengan token di header tidak bisa — gunakan query param workaround) */
 export const getExportCsvUrl = () =>
   `${BASE_URL}/pendaftar/export/csv`;
+
+export const jadwalAdminApi = {
+  getAll: () => apiFetch('/admin/jadwal'),
+  store: (data) => apiFetch('/admin/jadwal', { method: 'POST', body: JSON.stringify(data) }),
+  show: (id) => apiFetch(`/admin/jadwal/${id}`),
+  update: (id, data) => apiFetch(`/admin/jadwal/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  destroy: (id) => apiFetch(`/admin/jadwal/${id}`, { method: 'DELETE' }),
+  publish: (id) => apiFetch(`/admin/jadwal/${id}/publish`, { method: 'POST' }),
+  assignAuto: (id) => apiFetch(`/admin/jadwal/${id}/assign-auto`, { method: 'POST' }),
+  assignManual: (id, pendaftarIds) => apiFetch(`/admin/jadwal/${id}/assign`, { method: 'POST', body: JSON.stringify({ pendaftar_ids: pendaftarIds }) }),
+  getPeserta: (id) => apiFetch(`/admin/jadwal/${id}/peserta`),
+  unassign: (jadwalId, pjId) => apiFetch(`/admin/jadwal/${jadwalId}/peserta/${pjId}`, { method: 'DELETE' }),
+  updateKehadiran: (jadwalId, pjId, status) => apiFetch(`/admin/jadwal/${jadwalId}/peserta/${pjId}/kehadiran`, { method: 'PATCH', body: JSON.stringify({ status }) }),
+  resendNotifikasi: (id) => apiFetch(`/admin/jadwal/${id}/kirim-notifikasi`, { method: 'POST' }),
+};
+
+export const rescheduleAdminApi = {
+  getAll: (status) => apiFetch(`/admin/reschedule${status ? `?status=${status}` : ''}`),
+  process: (id, data) => apiFetch(`/admin/reschedule/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+};
+
+export const jadwalPublikApi = {
+  getByNomor: (nomor) => apiFetch(`/jadwal/${encodeURIComponent(nomor)}`),
+  konfirmasi: (nomor, token) => apiFetch(`/jadwal/${encodeURIComponent(nomor)}/konfirmasi`, { method: 'POST', body: JSON.stringify({ token_konfirmasi: token }) }),
+  requestReschedule: (nomor, alasan) => apiFetch(`/jadwal/${encodeURIComponent(nomor)}/reschedule`, { method: 'POST', body: JSON.stringify({ alasan }) }),
+};
